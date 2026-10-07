@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { INSTAGRAM_DM } from "@/lib/data";
+import CartButton from "./shop/CartButton";
 
 const LINKS = [
   { href: "#modeles", label: "Modèles" },
@@ -45,10 +46,12 @@ export default function Header() {
               {l.label}
             </a>
           ))}
-          <a className="btn" href={INSTAGRAM_DM} target="_blank" rel="noopener">
-            Écrire sur Instagram
+          <a className="btn ghost" href={INSTAGRAM_DM} target="_blank" rel="noopener">
+            Instagram
           </a>
         </nav>
+        <div className="top-actions">
+        <CartButton />
         <button
           type="button"
           className="menu-toggle"
@@ -60,6 +63,7 @@ export default function Header() {
           <span />
           <span />
         </button>
+        </div>
       </div>
     </header>
   );

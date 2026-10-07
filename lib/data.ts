@@ -5,19 +5,33 @@ export const CREATOR = "https://www.instagram.com/ryiihem/";
 export const PHONE_DISPLAY = "+216 50 994 459";
 export const PHONE_RAW = "+21650994459";
 
-export type Model = { name: string; detail: string; image: string };
+export type Model = {
+  id: string;
+  name: string;
+  detail: string;
+  image: string;
+  /** Price in Tunisian dinars, or null while it is "sur demande". */
+  price: number | null;
+};
 
 export const MODELS: Model[] = [
-  { name: "Noir", detail: "Sac à rabat, anse en perles", image: "/img/02.jpg" },
-  { name: "Violet", detail: "Sac à rabat, petit format", image: "/img/03.jpg" },
-  { name: "Fuchsia", detail: "Fermoir clip, anse métal", image: "/img/04.jpg" },
-  { name: "Rose", detail: "Sac à rabat, chaîne dorée", image: "/img/05.jpg" },
-  { name: "Champagne", detail: "Sac à rabat, anse en perles", image: "/img/06.jpg" },
-  { name: "Corail", detail: "Pochette, anse longue", image: "/img/07.jpg" },
-  { name: "Ivoire", detail: "Fermoir clip, grosses perles", image: "/img/08.jpg" },
-  { name: "Blanc", detail: "Pochette bandoulière, plaque au prénom", image: "/img/09.jpg" },
-  { name: "Argent", detail: "Sac à rabat, anse en perles", image: "/img/10.jpg" },
+  { id: "noir", name: "Noir", detail: "Sac à rabat, anse en perles", image: "/img/02.jpg", price: null },
+  { id: "violet", name: "Violet", detail: "Sac à rabat, petit format", image: "/img/03.jpg", price: null },
+  { id: "fuchsia", name: "Fuchsia", detail: "Fermoir clip, anse métal", image: "/img/04.jpg", price: null },
+  { id: "rose", name: "Rose", detail: "Sac à rabat, chaîne dorée", image: "/img/05.jpg", price: null },
+  { id: "champagne", name: "Champagne", detail: "Sac à rabat, anse en perles", image: "/img/06.jpg", price: null },
+  { id: "corail", name: "Corail", detail: "Pochette, anse longue", image: "/img/07.jpg", price: null },
+  { id: "ivoire", name: "Ivoire", detail: "Fermoir clip, grosses perles", image: "/img/08.jpg", price: null },
+  { id: "blanc", name: "Blanc", detail: "Pochette bandoulière, plaque au prénom", image: "/img/09.jpg", price: null },
+  { id: "argent", name: "Argent", detail: "Sac à rabat, anse en perles", image: "/img/10.jpg", price: null },
 ];
+
+/** Price of the made-to-order bag from the customiser (null = sur demande). */
+export const CUSTOM_PRICE: number | null = null;
+
+export function formatPrice(price: number | null) {
+  return price === null ? "Prix sur demande" : `${price.toLocaleString("fr-TN")} DT`;
+}
 
 export type PearlColor = { id: string; label: string; base: string; shade: string };
 
