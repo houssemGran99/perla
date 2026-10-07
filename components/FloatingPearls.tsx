@@ -47,15 +47,37 @@ export default function FloatingPearls() {
       speed: 0.04 + Math.random() * 0.08,
       phase: Math.random() * Math.PI * 2,
       tint: new THREE.Color(TINTS[i % TINTS.length]),
+      // Screen-space push from the pointer, springing back to rest.
+      ox: 0,
+      oy: 0,
+      vx: 0,
+      vy: 0,
     }));
     pearls.forEach((p, i) => mesh.setColorAt(i, p.tint));
 
     const pointer = new THREE.Vector2();
     const look = new THREE.Vector2();
+    // Pointer in the hero's own normalised device coords (null when outside it).
+    let local: THREE.Vector2 | null = null;
+    let shock: { x: number; y: number; t: number } | null = null;
+    let clock = 0;
+    function toLocal(e: PointerEvent) {
+      const b = wrap!.getBoundingClientRect();
+      const x = ((e.clientX - b.left) / b.width) * 2 - 1;
+      const y = -(((e.clientY - b.top) / b.height) * 2 - 1);
+      return Math.abs(x) <= 1 && Math.abs(y) <= 1 ? new THREE.Vector2(x, y) : null;
+    }
     const onMove = (e: PointerEvent) => {
       pointer.set((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1);
+      local = toLocal(e);
+    };
+    const onDown = (e: PointerEvent) => {
+      const l = toLocal(e);
+      if (l) shock = { x: l.x, y: l.y, t: clock };
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    const ndc = new THREE.Vector3();
 
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
@@ -72,6 +94,7 @@ export default function FloatingPearls() {
         span = { x: (vh * camera.aspect) / 2, y: vh / 2 };
       },
       (t, dt) => {
+        clock = t;
         look.lerp(pointer, Math.min(1, dt * 2));
         camera.position.x = look.x * 0.6;
         camera.position.y = -look.y * 0.4;
@@ -86,11 +109,45 @@ export default function FloatingPearls() {
             p.y * span.y * depth,
             p.z,
           );
+          // Pointer repel + click shockwave, measured on screen, then a damped spring home.
+          ndc.copy(pos).project(camera);
+          let fx = 0;
+          let fy = 0;
+          if (local) {
+            const dx = ndc.x - local.x;
+            const dy = (ndc.y - local.y) / camera.aspect;
+            const d = Math.hypot(dx, dy);
+            if (d < 0.22 && d > 1e-4) {
+              const f = (1 - d / 0.22) * 2.4;
+              fx += (dx / d) * f;
+              fy += (dy / d) * f;
+            }
+          }
+          if (shock) {
+            const age = t - shock.t;
+            const dx = ndc.x - shock.x;
+            const dy = (ndc.y - shock.y) / camera.aspect;
+            const d = Math.hypot(dx, dy) || 1e-4;
+            const front = age * 1.6; // the ring travels outward
+            const hit = Math.exp(-(((d - front) / 0.12) ** 2)) * Math.max(0, 1 - age);
+            fx += (dx / d) * hit * 12;
+            fy += (dy / d) * hit * 12;
+          }
+          p.vx += (fx - p.ox * 14) * dt;
+          p.vy += (fy - p.oy * 14) * dt;
+          p.vx *= 1 - Math.min(1, dt * 3.5);
+          p.vy *= 1 - Math.min(1, dt * 3.5);
+          p.ox += p.vx * dt;
+          p.oy += p.vy * dt;
+          pos.x += p.ox * span.x * depth;
+          pos.y += p.oy * span.y * depth;
+
           scl.setScalar(p.s * (1 + Math.sin(t * 0.8 + p.phase) * 0.04));
           m.compose(pos, q, scl);
           mesh.setMatrixAt(i, m);
         });
         mesh.instanceMatrix.needsUpdate = true;
+        if (shock && t - shock.t > 1.2) shock = null;
         renderer.render(scene, camera);
       },
       !reduce,
@@ -99,6 +156,7 @@ export default function FloatingPearls() {
     return () => {
       loop.stop();
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
       geo.dispose();
       mat.dispose();
       mesh.dispose();

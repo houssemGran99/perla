@@ -358,6 +358,33 @@ h1 {
   opacity: 0.9;
 }
 
+/* 3D pearl strands: the canvas is taller than the strand so it has room to swing,
+   with negative margins keeping the same footprint as the flat divider. */
+.strand3d {
+  position: relative;
+  z-index: 1;
+  height: 64px;
+  margin-block: -25px;
+  display: flex;
+  align-items: center;
+}
+.strand3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.strand3d.placeholder .strand {
+  flex: 1;
+}
+.strand3d.thread {
+  height: 96px;
+  margin: -12px 0 20px;
+}
+footer {
+  margin-top: 12px;
+}
+
 /* ---------- Sections ---------- */
 section {
   padding-block: clamp(48px, 8vw, 72px);

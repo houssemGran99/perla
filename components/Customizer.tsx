@@ -43,7 +43,13 @@ export default function Customizer() {
                 aria-pressed={c.id === colorId}
                 aria-label={c.label}
                 title={c.label}
-                onClick={() => setColorId(c.id)}
+                onClick={(e) => {
+                  setColorId(c.id);
+                  const el = e.currentTarget;
+                  import("@/lib/burst").then(({ burstFrom }) =>
+                    burstFrom(el, { colors: [c.base, c.base, "#ffffff"], count: 14, spread: 0.6 }),
+                  );
+                }}
                 style={{ background: `radial-gradient(circle at 35% 30%, #fff, ${c.base} 45%, ${c.shade})` }}
               />
             ))}

@@ -105,22 +105,77 @@ export default function PearlBag3D({ color, label }: Props) {
     scene.add(bag);
 
     const { pts, handleStart, top } = buildPearls();
+    const count = pts.length;
     const geo = new THREE.SphereGeometry(R, 20, 14);
     const mat = createPearlMaterial();
-    const mesh = new THREE.InstancedMesh(geo, mat, pts.length);
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
+    const mesh = new THREE.InstancedMesh(geo, mat, count);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    bag.add(mesh);
+
     // Deterministic per-pearl jitter so each bead catches light a little differently.
     const jitter = pts.map((_, i) => {
       const s = Math.sin(i * 12.9898) * 43758.5453;
       return s - Math.floor(s);
     });
-    pts.forEach((p, i) => {
-      const scale = (i >= handleStart ? 1.15 : 0.96) + jitter[i] * 0.06;
-      m.compose(p, q, new THREE.Vector3(scale, scale, scale));
-      mesh.setMatrixAt(i, m);
+    const baseScale = pts.map((_, i) => (i >= handleStart ? 1.15 : 0.96) + jitter[i] * 0.06);
+    let minY = Infinity;
+    let maxY = -Infinity;
+    pts.forEach((p) => {
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
     });
-    bag.add(mesh);
+    const height01 = pts.map((p) => (p.y - minY) / (maxY - minY)); // 0 = bottom, 1 = top of handle
+
+    // Assembly: pearls swirl in from a loose cloud and settle from the base upward.
+    const ASSEMBLE = 2.6;
+    const assembleDelay = height01.map((h, i) => h * 1.7 + jitter[i] * 0.25);
+    const startPos = pts.map((p, i) => {
+      const a = jitter[i] * Math.PI * 2;
+      return new THREE.Vector3(p.x * 2.4 + Math.cos(a) * 0.8, p.y + 1.4 + jitter[i], p.z * 2.4 + Math.sin(a) * 0.8 + 0.6);
+    });
+    let assembleT0: number | null = reduce ? -Infinity : null;
+
+    // Colour wave: each pearl swaps colour (with a small pop) as a wave runs down the bag.
+    const WAVE = 1.1;
+    const fromCol = pts.map(() => new THREE.Color());
+    const toCol = pts.map(() => new THREE.Color());
+    let waveT0 = -Infinity;
+
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const pos = new THREE.Vector3();
+    const scl = new THREE.Vector3();
+    const tmp = new THREE.Color();
+    const easeOutBack = (x: number) => 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2);
+    const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+    const waveProgress = (i: number, t: number) => clamp01((t - waveT0 - (1 - height01[i]) * 0.7) / 0.35);
+
+    /** Writes every pearl's transform and colour for time t. Returns true while still animating. */
+    function updatePearls(t: number) {
+      const aT = assembleT0 === null ? -1 : t - assembleT0;
+      const wT = t - waveT0;
+      for (let i = 0; i < count; i++) {
+        // Assembly
+        let a = assembleT0 === null ? 0 : clamp01((aT - assembleDelay[i]) / 0.7);
+        if (assembleT0 === -Infinity) a = 1;
+        const e = a >= 1 ? 1 : easeOutBack(a);
+        pos.lerpVectors(startPos[i], pts[i], e);
+        // Wave
+        const w = waveProgress(i, t);
+        const pop = w > 0 && w < 1 ? Math.sin(w * Math.PI) * 0.35 : 0;
+        scl.setScalar(baseScale[i] * Math.min(1, a * 1.6) * (1 + pop));
+        m.compose(pos, q, scl);
+        mesh.setMatrixAt(i, m);
+        tmp.copy(fromCol[i]).lerp(toCol[i], w);
+        mesh.setColorAt(i, tmp);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      const plateIn = assembleT0 === -Infinity ? 1 : clamp01((aT - 1.9) / 0.5);
+      plate.scale.setScalar(plateIn === 1 ? 1 : easeOutBack(plateIn) || 0.0001);
+      return aT < ASSEMBLE + 0.8 || wT < WAVE;
+    }
 
     // Gold name plate on the front.
     const plateY = top - 0.42;
@@ -135,26 +190,45 @@ export default function PearlBag3D({ color, label }: Props) {
     function frame() {
       const vFov = THREE.MathUtils.degToRad(camera.fov);
       const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
-      const dist = (bounds.radius * 1.0) / Math.sin(Math.min(vFov, hFov) / 2);
+      const dist = bounds.radius / Math.sin(Math.min(vFov, hFov) / 2);
       camera.position.set(bounds.center.x, bounds.center.y + dist * 0.12, bounds.center.z + dist);
       camera.lookAt(bounds.center);
     }
 
     const rose = new THREE.Color("#f3cfe0");
     const blue = new THREE.Color("#cfe0f3");
-    const tmp = new THREE.Color();
+    let firstColor = true;
     function applyColor(hex: string) {
       const base = new THREE.Color(hex);
-      pts.forEach((_, i) => {
+      for (let i = 0; i < count; i++) {
         const j = jitter[i];
-        tmp.copy(base);
-        if (j < 0.14) tmp.lerp(rose, 0.25);
-        else if (j > 0.88) tmp.lerp(blue, 0.25);
-        mesh.setColorAt(i, tmp);
-      });
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        // Start the new wave from whatever colour the pearl shows right now.
+        if (!firstColor) fromCol[i].lerp(toCol[i], waveProgress(i, performance.now() / 1000));
+        toCol[i].copy(base);
+        if (j < 0.14) toCol[i].lerp(rose, 0.25);
+        else if (j > 0.88) toCol[i].lerp(blue, 0.25);
+        if (firstColor) fromCol[i].copy(toCol[i]);
+      }
+      if (!firstColor && !reduce) waveT0 = performance.now() / 1000;
+      if (reduce) fromCol.forEach((c, i) => c.copy(toCol[i]));
+      firstColor = false;
+      animating = true;
       loop?.poke();
     }
+    let animating = true;
+
+    // Start assembling once the bag is properly on screen.
+    const startIO = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && assembleT0 === null) {
+          assembleT0 = performance.now() / 1000 + 0.15;
+          animating = true;
+          startIO.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    if (!reduce) startIO.observe(wrap);
 
     // Drag to spin; otherwise a slow turntable with a gentle float.
     let rotY = -0.5;
@@ -203,6 +277,7 @@ export default function PearlBag3D({ color, label }: Props) {
         frame();
       },
       (t, dt) => {
+        if (animating) animating = updatePearls(t);
         if (!dragging) {
           // Ease back towards the idle spin after a flick.
           const idleSpeed = reduce ? 0 : 0.35;
@@ -221,6 +296,7 @@ export default function PearlBag3D({ color, label }: Props) {
 
     return () => {
       loop?.stop();
+      startIO.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);

@@ -18,10 +18,12 @@ export default function CopyPhone({ children }: { children?: React.ReactNode }) 
     setLabel("Numéro sélectionné");
   }
 
-  async function copy() {
+  async function copy(e: React.MouseEvent<HTMLButtonElement>) {
+    const btn = e.currentTarget;
     try {
       await navigator.clipboard.writeText(PHONE_RAW);
       setLabel("Numéro copié");
+      import("@/lib/burst").then(({ burstFrom }) => burstFrom(btn));
       setTimeout(() => setLabel("Copier le numéro"), 1800);
     } catch {
       selectNumber();

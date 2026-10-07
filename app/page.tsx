@@ -4,15 +4,8 @@ import CopyPhone from "@/components/CopyPhone";
 import Header from "@/components/Header";
 import HeroPearls from "@/components/HeroPearls";
 import Reveal from "@/components/Reveal";
+import Strand from "@/components/Strand";
 import { CREATOR, INSTAGRAM, INSTAGRAM_DM, MODELS, TIKTOK } from "@/lib/data";
-
-function Strand() {
-  return (
-    <div className="wrap">
-      <div className="strand" aria-hidden="true" />
-    </div>
-  );
-}
 
 export default function Home() {
   return (
@@ -61,7 +54,9 @@ export default function Home() {
           </div>
         </div>
 
-        <Strand />
+        <div className="wrap">
+          <Strand />
+        </div>
 
         <section id="modeles">
           <div className="wrap">
@@ -115,6 +110,7 @@ export default function Home() {
                 Du message <em>à votre porte.</em>
               </h2>
             </div>
+            <Strand variant="thread" />
             <ol className="steps">
               <li className="reveal">
                 <h3>Choisissez</h3>
@@ -179,6 +175,10 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <div className="wrap">
+        <Strand />
+      </div>
 
       <footer>
         <div className="wrap">
