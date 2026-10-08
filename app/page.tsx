@@ -2,6 +2,7 @@ import Image from "next/image";
 import { BagColorProvider } from "@/components/BagColor";
 import Customizer from "@/components/Customizer";
 import CopyPhone from "@/components/CopyPhone";
+import Guide, { GuideButton } from "@/components/Guide";
 import Header from "@/components/Header";
 import HeroBag from "@/components/HeroBag";
 import HeroPearls from "@/components/HeroPearls";
@@ -17,6 +18,7 @@ export default function Home() {
     <CartProvider>
       <Header />
       <CartDrawer />
+      <Guide />
       <Reveal />
 
       <BagColorProvider>
@@ -46,6 +48,9 @@ export default function Home() {
                     @perllaaa_7
                   </a>
                 </div>
+                <p className="rise" style={{ animationDelay: "420ms" }}>
+                  <GuideButton className="guide-link">Première visite ? Guidez-moi à travers le site →</GuideButton>
+                </p>
               </div>
               <HeroBag />
             </div>
