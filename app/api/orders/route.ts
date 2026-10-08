@@ -127,7 +127,7 @@ export async function POST(req: Request) {
   // Optional confirmation to the customer (needs a sender on your own verified domain); never
   // fails the order. Awaited so serverless platforms don't freeze the function before it is sent.
   if (order.customer.email && process.env.ORDER_EMAIL_FROM) {
-    const intro = `Merci ${order.customer.name} ! Nous avons bien reçu votre commande. Nous vous appelons au ${order.customer.phone} pour confirmer le prix et la livraison.`;
+    const intro = `Merci ${order.customer.name} ! Nous avons bien reçu votre commande. Nous vous appelons au ${order.customer.phone} pour confirmer la commande et la livraison.`;
     await sendEmail({
       to: order.customer.email,
       subject: `PERLA — votre commande ${ref}`,

@@ -94,8 +94,8 @@ export default function Home() {
                 ))}
               </div>
               <p className="note">
-                Commandez en ligne : nous vous appelons pour confirmer le prix et la livraison, et vous payez à la
-                livraison. Vous pouvez aussi demander les prix par message ou par téléphone.
+                Commandez en ligne : nous vous appelons pour confirmer la commande et la livraison, et vous payez à
+                la livraison. Vous pouvez aussi commander par message ou par téléphone.
               </p>
             </div>
           </section>
