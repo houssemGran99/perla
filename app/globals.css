@@ -502,6 +502,13 @@ section {
   color: var(--muted);
   text-align: center;
 }
+.hero-stage .bag3d {
+  max-width: 540px;
+  animation: rise 1.1s 0.2s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+a.hint:hover {
+  color: var(--fg);
+}
 .swatches {
   display: flex;
   gap: 12px;
