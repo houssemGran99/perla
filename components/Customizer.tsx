@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
 import { CUSTOM_PRICE, INSTAGRAM_DM, formatPrice } from "@/lib/data";
 import { PLATE_MAX } from "@/lib/order";
 import { BagSwatches, useBagColor } from "./BagColor";
@@ -13,8 +12,7 @@ const PearlBag3D = dynamic(() => import("./PearlBag3D"), {
 });
 
 export default function Customizer() {
-  const { color } = useBagColor();
-  const [plate, setPlate] = useState("");
+  const { color, plate, setPlate } = useBagColor();
 
   return (
     <section id="personnalise">
@@ -55,7 +53,7 @@ export default function Customizer() {
           </div>
         </div>
         <div className="stage center reveal">
-          <PearlBag3D color={color.base} label={color.label} />
+          <PearlBag3D color={color.base} label={color.label} plate={plate} />
           <BagSwatches />
           <span className="hint">Choisissez une couleur, puis faites tourner le sac</span>
         </div>
