@@ -3,21 +3,24 @@
 import { createContext, useContext, useState } from "react";
 import { PEARL_COLORS } from "@/lib/data";
 
-type Ctx = { colorId: string; setColorId: (id: string) => void };
+type Ctx = { colorId: string; setColorId: (id: string) => void; plate: string; setPlate: (name: string) => void };
 
 const BagColorContext = createContext<Ctx | null>(null);
 
-/** Shares the chosen pearl colour between the hero bag and the customiser. */
+/** Shares the chosen pearl colour and plate name between the hero bag and the customiser. */
 export function BagColorProvider({ children }: { children: React.ReactNode }) {
   const [colorId, setColorId] = useState(PEARL_COLORS[0].id);
-  return <BagColorContext.Provider value={{ colorId, setColorId }}>{children}</BagColorContext.Provider>;
+  const [plate, setPlate] = useState("");
+  return (
+    <BagColorContext.Provider value={{ colorId, setColorId, plate, setPlate }}>{children}</BagColorContext.Provider>
+  );
 }
 
 export function useBagColor() {
   const ctx = useContext(BagColorContext);
   if (!ctx) throw new Error("useBagColor must be used inside BagColorProvider");
   const color = PEARL_COLORS.find((c) => c.id === ctx.colorId) ?? PEARL_COLORS[0];
-  return { color, setColorId: ctx.setColorId };
+  return { color, setColorId: ctx.setColorId, plate: ctx.plate, setPlate: ctx.setPlate };
 }
 
 /** Pearl colour picker; each pick bursts a few pearls from the swatch. */

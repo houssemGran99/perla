@@ -11,7 +11,7 @@ import {
   runLoop,
 } from "@/lib/three-pearl";
 
-type Props = { color: string; label: string };
+type Props = { color: string; label: string; plate?: string };
 
 const R = 0.058; // pearl radius
 const D = R * 2.08; // spacing between pearl centres
@@ -73,10 +73,52 @@ function buildPearls() {
   return { pts, handleStart: pts.length - (hn + 1), top, height };
 }
 
-export default function PearlBag3D({ color, label }: Props) {
+const PLATE_W = 0.6;
+const PLATE_H = 0.17;
+
+/** Paints the gold plate face with the name engraved on it, shrinking long names to fit. */
+function drawPlate(ctx: CanvasRenderingContext2D, name: string) {
+  const { width: w, height: h } = ctx.canvas;
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "#f6dfa0");
+  g.addColorStop(0.5, "#e8c878");
+  g.addColorStop(1, "#c9a453");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "rgb(120 86 30 / 0.55)";
+  ctx.lineWidth = h * 0.05;
+  ctx.strokeRect(h * 0.08, h * 0.08, w - h * 0.16, h - h * 0.16);
+
+  const text = (name.trim() || "PERLA").toUpperCase();
+  const family = getComputedStyle(document.documentElement).getPropertyValue("--display").trim() || "Georgia, serif";
+  const spacing = 0.12;
+  let size = h * 0.62;
+  const measure = () => {
+    ctx.font = `600 ${size}px ${family}`;
+    return ctx.measureText(text).width + Math.max(0, text.length - 1) * size * spacing;
+  };
+  const maxW = w - h * 0.5;
+  while (measure() > maxW && size > h * 0.2) size *= 0.94;
+
+  // Engraved: a light lip below, the dark cut on top.
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  let x = (w - measure()) / 2;
+  for (const ch of text) {
+    ctx.fillStyle = "rgb(255 244 210 / 0.8)";
+    ctx.fillText(ch, x, h / 2 + size * 0.06);
+    ctx.fillStyle = "#6b4a14";
+    ctx.fillText(ch, x, h / 2);
+    x += ctx.measureText(ch).width + size * spacing;
+  }
+}
+
+export default function PearlBag3D({ color, label, plate: plateName = "" }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const colorRef = useRef<(c: string) => void>(() => {});
+  const nameRef = useRef<(n: string) => void>(() => {});
+  const plateNameRef = useRef(plateName);
   const [supported, setSupported] = useState(true);
 
   useEffect(() => {
@@ -181,7 +223,21 @@ export default function PearlBag3D({ color, label }: Props) {
     const plateY = top - 0.42;
     const plateZ = section(0.28).rz + R * 1.2;
     const gold = new THREE.MeshStandardMaterial({ color: "#e8c878", metalness: 1, roughness: 0.2 });
-    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.03), gold);
+    const plateCanvas = document.createElement("canvas");
+    plateCanvas.width = 512;
+    plateCanvas.height = Math.round((512 * PLATE_H) / PLATE_W);
+    const plateCtx = plateCanvas.getContext("2d")!;
+    const plateTex = new THREE.CanvasTexture(plateCanvas);
+    plateTex.colorSpace = THREE.SRGBColorSpace;
+    plateTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const face = new THREE.MeshStandardMaterial({ map: plateTex, metalness: 0.75, roughness: 0.3 });
+    // BoxGeometry face order: +x, -x, +y, -y, +z (front), -z.
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(PLATE_W, PLATE_H, 0.03), [gold, gold, gold, gold, face, gold]);
+    function setName(n: string) {
+      drawPlate(plateCtx, n);
+      plateTex.needsUpdate = true;
+      loop?.poke();
+    }
     plate.position.set(0, plateY, plateZ);
     bag.add(plate);
 
@@ -293,6 +349,10 @@ export default function PearlBag3D({ color, label }: Props) {
     );
     colorRef.current = applyColor;
     applyColor(color);
+    nameRef.current = setName;
+    setName(plateNameRef.current);
+    // Redraw once the display font has loaded so the engraving uses it.
+    document.fonts?.ready.then(() => nameRef.current === setName && setName(plateNameRef.current));
 
     return () => {
       loop?.stop();
@@ -305,6 +365,9 @@ export default function PearlBag3D({ color, label }: Props) {
       geo.dispose();
       mat.dispose();
       gold.dispose();
+      face.dispose();
+      plateTex.dispose();
+      nameRef.current = () => {};
       plate.geometry.dispose();
       mesh.dispose();
       env.dispose();
@@ -317,6 +380,11 @@ export default function PearlBag3D({ color, label }: Props) {
   useEffect(() => {
     colorRef.current(color);
   }, [color]);
+
+  useEffect(() => {
+    plateNameRef.current = plateName;
+    nameRef.current(plateName);
+  }, [plateName]);
 
   if (!supported) {
     return (

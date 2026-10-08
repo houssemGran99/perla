@@ -10,10 +10,10 @@ const PearlBag3D = dynamic(() => import("./PearlBag3D"), {
 
 /** The customisable 3D bag, front and centre in the hero. */
 export default function HeroBag() {
-  const { color } = useBagColor();
+  const { color, plate } = useBagColor();
   return (
     <div className="stage hero-stage">
-      <PearlBag3D color={color.base} label={color.label} />
+      <PearlBag3D color={color.base} label={color.label} plate={plate} />
       <BagSwatches />
       <a className="hint" href="#personnalise">
         Sac personnalisé · {color.label} · ajoutez votre prénom ↓
