@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { INSTAGRAM_DM } from "@/lib/data";
+import { GuideButton } from "./Guide";
 import CartButton from "./shop/CartButton";
 
 const LINKS = [
@@ -51,6 +52,10 @@ export default function Header() {
           </a>
         </nav>
         <div className="top-actions">
+        <GuideButton className="guide-btn">
+          <span aria-hidden="true">?</span>
+          <span className="guide-btn-label">Guidez-moi</span>
+        </GuideButton>
         <CartButton />
         <button
           type="button"

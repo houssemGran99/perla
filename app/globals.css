@@ -1116,3 +1116,178 @@ dialog.drawer::backdrop {
     animation: none;
   }
 }
+
+/* ---------- Guided tour ---------- */
+.guide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: 500 0.9rem var(--body);
+  cursor: pointer;
+  border-radius: 999px;
+}
+.guide-btn > span:first-child {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: var(--display);
+  font-weight: 600;
+  background: radial-gradient(circle at 35% 30%, var(--pearl-hi), var(--pearl-mid) 45%, var(--pearl-lo));
+  color: #231a2a;
+}
+.guide-btn:hover > span:first-child {
+  transform: scale(1.08);
+}
+.guide-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.92rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.guide-link:hover {
+  color: var(--fg);
+}
+
+.guide-spot {
+  position: fixed;
+  z-index: 70;
+  border-radius: 18px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--gold) 70%, transparent),
+    0 0 0 9999px rgb(20 12 24 / 0.58);
+  transition:
+    top 0.35s cubic-bezier(0.2, 0.7, 0.1, 1),
+    left 0.35s cubic-bezier(0.2, 0.7, 0.1, 1),
+    width 0.35s cubic-bezier(0.2, 0.7, 0.1, 1),
+    height 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.guide-spot.none {
+  inset: 50%;
+  width: 0;
+  height: 0;
+}
+.guide-card {
+  position: fixed;
+  z-index: 71;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  padding: 20px 20px 16px;
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -20px rgb(20 12 24 / 0.55);
+  outline: none;
+  animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  transition:
+    top 0.35s cubic-bezier(0.2, 0.7, 0.1, 1),
+    left 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.guide-card[style] {
+  translate: none;
+}
+.guide-card h3 {
+  margin: 4px 0 6px;
+  font-size: 1.35rem;
+}
+.guide-card p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.guide-count {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.guide-pearls {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.guide-pearls button {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.guide-pearls button.done,
+.guide-pearls button.on {
+  border-color: transparent;
+  background: radial-gradient(circle at 35% 30%, var(--pearl-hi), var(--pearl-mid) 45%, var(--pearl-lo));
+}
+.guide-pearls button.on {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.guide-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guide-actions .btn {
+  min-height: 40px;
+  padding: 0.6em 1.2em;
+}
+.guide-skip {
+  margin-right: auto;
+  border: 0;
+  padding: 8px 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.guide-skip:hover {
+  color: var(--fg);
+}
+@media (max-width: 1000px) {
+  .guide-btn-label {
+    display: none;
+  }
+  .guide-btn {
+    padding: 0 9px;
+  }
+}
+@media (max-width: 780px) {
+  .guide-card,
+  .guide-card[style] {
+    top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    translate: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-spot,
+  .guide-card {
+    transition: none;
+    animation: none;
+  }
+}
