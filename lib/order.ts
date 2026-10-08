@@ -182,3 +182,49 @@ export function orderText(order: Order, ref?: string) {
     ...(c.note ? ["", `Note : ${c.note}`] : []),
   ].join("\n");
 }
+
+const esc = (v: string) =>
+  v.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!);
+
+/** E-mail version of the order (inline styles only, as mail clients require). */
+export function orderHtml(order: Order, ref: string, intro?: string) {
+  const { customer: c } = order;
+  const tel = c.phone.replace(/\s/g, "");
+  const rows = order.lines
+    .map(
+      (l) => `<tr>
+  <td style="padding:10px 0;border-bottom:1px solid #e8e4ec"><strong>${l.qty} × ${esc(l.label)}</strong><br><span style="color:#6a5f72">${esc(l.detail)}</span></td>
+  <td style="padding:10px 0;border-bottom:1px solid #e8e4ec;text-align:right;white-space:nowrap">${l.price !== null ? `${l.price * l.qty} DT` : "Sur demande"}</td>
+</tr>`,
+    )
+    .join("");
+  const info: [string, string][] = [
+    ["Nom", esc(c.name)],
+    ["Téléphone", `<a href="tel:${tel}" style="color:#5a2f52">${esc(c.phone)}</a>`],
+    ...(c.email ? ([["E-mail", `<a href="mailto:${esc(c.email)}" style="color:#5a2f52">${esc(c.email)}</a>`]] as [string, string][]) : []),
+    ["Adresse", `${esc(c.address)}, ${esc(c.governorate)}`],
+    ...(c.note ? ([["Note", esc(c.note)]] as [string, string][]) : []),
+  ];
+  return `<!doctype html><html><body style="margin:0;background:#f2f0f4;font-family:Helvetica,Arial,sans-serif;color:#231a2a">
+<div style="max-width:560px;margin:0 auto;padding:28px 20px">
+  <p style="font-family:Georgia,serif;font-size:26px;letter-spacing:6px;margin:0 0 4px">PERLA</p>
+  <p style="color:#86621f;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 20px">Commande ${esc(ref)}</p>
+  ${intro ? `<p style="margin:0 0 18px;line-height:1.5">${esc(intro)}</p>` : ""}
+  <div style="background:#fff;border-radius:12px;padding:18px 20px">
+    <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}
+      <tr><td style="padding-top:12px"><strong>Total</strong></td><td style="padding-top:12px;text-align:right"><strong>${
+        order.total !== null ? `${order.total} DT + livraison` : "Prix à confirmer"
+      }</strong></td></tr>
+    </table>
+    <p style="margin:10px 0 0;color:#6a5f72;font-size:13px">Paiement à la livraison</p>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:18px 20px;margin-top:14px">
+    <table style="width:100%;border-collapse:collapse;font-size:15px">${info
+      .map(
+        ([k, v]) =>
+          `<tr><td style="padding:5px 12px 5px 0;color:#6a5f72;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0">${v}</td></tr>`,
+      )
+      .join("")}</table>
+  </div>
+</div></body></html>`;
+}

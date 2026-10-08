@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { orderText, validateOrder, type Order } from "@/lib/order";
+import { SHOP_ORDER_EMAIL } from "@/lib/data";
+import { orderHtml, orderText, validateOrder, type Order } from "@/lib/order";
 
 export const runtime = "nodejs";
 
@@ -36,28 +37,41 @@ async function sendTelegram(text: string) {
   return true;
 }
 
-async function sendEmail(to: string, subject: string, text: string, replyTo?: string) {
+// Resend's shared test sender works without a domain, but only delivers to the inbox of the
+// Resend account owner — enough for shop notifications, not for customer confirmations.
+const TEST_SENDER = "PERLA <onboarding@resend.dev>";
+
+async function sendEmail(mail: { to: string; subject: string; text: string; html?: string; replyTo?: string }) {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.ORDER_EMAIL_FROM;
-  if (!key || !from) return null;
+  if (!key) return null;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to, subject, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
+    body: JSON.stringify({
+      from: process.env.ORDER_EMAIL_FROM || TEST_SENDER,
+      to: mail.to,
+      subject: mail.subject,
+      text: mail.text,
+      ...(mail.html ? { html: mail.html } : {}),
+      ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
+    }),
   });
-  if (!res.ok) throw new Error(`Resend ${res.status}`);
+  if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
   return true;
 }
 
 /** Sends the order to every configured channel. Returns how many delivered, and how many were configured. */
 async function notifyShop(order: Order, ref: string) {
   const text = orderText(order, ref);
-  const shopEmail = process.env.ORDER_EMAIL_TO;
   const results = await Promise.allSettled([
     sendTelegram(text),
-    shopEmail
-      ? sendEmail(shopEmail, `Nouvelle commande ${ref} — ${order.customer.name}`, text, order.customer.email ?? undefined)
-      : Promise.resolve(null),
+    sendEmail({
+      to: process.env.ORDER_EMAIL_TO || SHOP_ORDER_EMAIL,
+      subject: `Nouvelle commande ${ref} — ${order.customer.name}`,
+      text,
+      html: orderHtml(order, ref),
+      replyTo: order.customer.email ?? undefined,
+    }),
   ]);
   let configured = 0;
   let delivered = 0;
@@ -110,14 +124,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: configured ? "delivery_failed" : "not_configured" }, { status: 503 });
   }
 
-  // Optional confirmation to the customer; never fails the order. Awaited so serverless
-  // platforms don't freeze the function before it is sent.
-  if (order.customer.email) {
-    await sendEmail(
-      order.customer.email,
-      `PERLA — votre commande ${ref}`,
-      `Merci ${order.customer.name} !\n\nNous avons bien reçu votre commande. Nous vous appelons au ${order.customer.phone} pour confirmer le prix et la livraison.\n\n${orderText(order, ref)}`,
-    ).catch((e) => console.error("[orders] confirmation e-mail failed:", e));
+  // Optional confirmation to the customer (needs a sender on your own verified domain); never
+  // fails the order. Awaited so serverless platforms don't freeze the function before it is sent.
+  if (order.customer.email && process.env.ORDER_EMAIL_FROM) {
+    const intro = `Merci ${order.customer.name} ! Nous avons bien reçu votre commande. Nous vous appelons au ${order.customer.phone} pour confirmer le prix et la livraison.`;
+    await sendEmail({
+      to: order.customer.email,
+      subject: `PERLA — votre commande ${ref}`,
+      text: `${intro}\n\n${orderText(order, ref)}`,
+      html: orderHtml(order, ref, intro),
+    }).catch((e) => console.error("[orders] confirmation e-mail failed:", e));
   }
 
   return NextResponse.json({ ok: true, ref });

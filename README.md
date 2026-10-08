@@ -16,12 +16,19 @@ Visitors add bags (or a custom colour with a name on the plate) to the cart and 
 **name, phone (required, Tunisian 8-digit), optional e-mail, governorate and address**.
 Payment is cash on delivery; prices marked "sur demande" are confirmed by phone.
 
-Orders are sent by `app/api/orders` to the channels configured in environment variables
-(copy `.env.example` to `.env.local`, or set them in Vercel → Settings → Environment Variables):
+Every new order is **e-mailed to houssemgran1990@gmail.com** (`SHOP_ORDER_EMAIL` in `lib/data.ts`)
+through [Resend](https://resend.com). Setup:
 
-- **Telegram** (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`) — instant notification on the shop's phone.
-- **E-mail via Resend** (`RESEND_API_KEY`, `ORDER_EMAIL_FROM`, `ORDER_EMAIL_TO`) — customers who give
-  an e-mail also get a confirmation.
+1. Create a free Resend account using houssemgran1990@gmail.com and create an API key.
+2. Set `RESEND_API_KEY` (Vercel → Settings → Environment Variables, or `.env.local`), then redeploy.
+
+That's all: without a domain, mail goes out from Resend's test sender `onboarding@resend.dev`, which can
+deliver to the account owner's inbox. Optional extras (see `.env.example`):
+
+- `ORDER_EMAIL_FROM` — a sender on your own verified domain; also turns on confirmation e-mails to
+  customers who leave an address.
+- `ORDER_EMAIL_TO` — send orders to a different inbox.
+- `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` — an instant Telegram message as well.
 
 If no channel is configured in production, checkout shows the order as a ready-to-send message
 (copy → Instagram DM or call) so nothing is lost. In `npm run dev` orders are printed to the terminal.

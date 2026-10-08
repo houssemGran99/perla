@@ -4,6 +4,8 @@ export const TIKTOK = "https://www.tiktok.com/@peeerlla";
 export const CREATOR = "https://www.instagram.com/ryiihem/";
 export const PHONE_DISPLAY = "+216 50 994 459";
 export const PHONE_RAW = "+21650994459";
+/** Inbox that receives every new online order (overridable with ORDER_EMAIL_TO). */
+export const SHOP_ORDER_EMAIL = "houssemgran1990@gmail.com";
 
 export type Model = {
   id: string;
