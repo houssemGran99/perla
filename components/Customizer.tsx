@@ -2,8 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { CUSTOM_PRICE, INSTAGRAM_DM, PEARL_COLORS, formatPrice } from "@/lib/data";
+import { CUSTOM_PRICE, INSTAGRAM_DM, formatPrice } from "@/lib/data";
 import { PLATE_MAX } from "@/lib/order";
+import { BagSwatches, useBagColor } from "./BagColor";
 import AddToCart from "./shop/AddToCart";
 
 const PearlBag3D = dynamic(() => import("./PearlBag3D"), {
@@ -12,9 +13,8 @@ const PearlBag3D = dynamic(() => import("./PearlBag3D"), {
 });
 
 export default function Customizer() {
-  const [colorId, setColorId] = useState(PEARL_COLORS[0].id);
+  const { color } = useBagColor();
   const [plate, setPlate] = useState("");
-  const color = PEARL_COLORS.find((c) => c.id === colorId) ?? PEARL_COLORS[0];
 
   return (
     <section id="personnalise">
@@ -56,26 +56,7 @@ export default function Customizer() {
         </div>
         <div className="stage center reveal">
           <PearlBag3D color={color.base} label={color.label} />
-          <div className="swatches" role="group" aria-label="Couleur des perles">
-            {PEARL_COLORS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className="sw"
-                aria-pressed={c.id === colorId}
-                aria-label={c.label}
-                title={c.label}
-                onClick={(e) => {
-                  setColorId(c.id);
-                  const el = e.currentTarget;
-                  import("@/lib/burst").then(({ burstFrom }) =>
-                    burstFrom(el, { colors: [c.base, c.base, "#ffffff"], count: 14, spread: 0.6 }),
-                  );
-                }}
-                style={{ background: `radial-gradient(circle at 35% 30%, #fff, ${c.base} 45%, ${c.shade})` }}
-              />
-            ))}
-          </div>
+          <BagSwatches />
           <span className="hint">Choisissez une couleur, puis faites tourner le sac</span>
         </div>
       </div>
