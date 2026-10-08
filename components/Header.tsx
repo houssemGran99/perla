@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { INSTAGRAM_DM } from "@/lib/data";
 import { GuideButton } from "./Guide";
 import CartButton from "./shop/CartButton";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "#modeles", label: "Modèles" },
@@ -56,6 +57,7 @@ export default function Header() {
           <span aria-hidden="true">?</span>
           <span className="guide-btn-label">Guidez-moi</span>
         </GuideButton>
+        <ThemeToggle />
         <CartButton />
         <button
           type="button"
