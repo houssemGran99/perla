@@ -16,20 +16,23 @@ export type Model = {
   price: number | null;
 };
 
+/** Temporary flat price for every bag, in Tunisian dinars. */
+const PRICE = 100;
+
 export const MODELS: Model[] = [
-  { id: "noir", name: "Noir", detail: "Sac à rabat, anse en perles", image: "/img/02.jpg", price: null },
-  { id: "violet", name: "Violet", detail: "Sac à rabat, petit format", image: "/img/03.jpg", price: null },
-  { id: "fuchsia", name: "Fuchsia", detail: "Fermoir clip, anse métal", image: "/img/04.jpg", price: null },
-  { id: "rose", name: "Rose", detail: "Sac à rabat, chaîne dorée", image: "/img/05.jpg", price: null },
-  { id: "champagne", name: "Champagne", detail: "Sac à rabat, anse en perles", image: "/img/06.jpg", price: null },
-  { id: "corail", name: "Corail", detail: "Pochette, anse longue", image: "/img/07.jpg", price: null },
-  { id: "ivoire", name: "Ivoire", detail: "Fermoir clip, grosses perles", image: "/img/08.jpg", price: null },
-  { id: "blanc", name: "Blanc", detail: "Pochette bandoulière, plaque au prénom", image: "/img/09.jpg", price: null },
-  { id: "argent", name: "Argent", detail: "Sac à rabat, anse en perles", image: "/img/10.jpg", price: null },
+  { id: "noir", name: "Noir", detail: "Sac à rabat, anse en perles", image: "/img/02.jpg", price: PRICE },
+  { id: "violet", name: "Violet", detail: "Sac à rabat, petit format", image: "/img/03.jpg", price: PRICE },
+  { id: "fuchsia", name: "Fuchsia", detail: "Fermoir clip, anse métal", image: "/img/04.jpg", price: PRICE },
+  { id: "rose", name: "Rose", detail: "Sac à rabat, chaîne dorée", image: "/img/05.jpg", price: PRICE },
+  { id: "champagne", name: "Champagne", detail: "Sac à rabat, anse en perles", image: "/img/06.jpg", price: PRICE },
+  { id: "corail", name: "Corail", detail: "Pochette, anse longue", image: "/img/07.jpg", price: PRICE },
+  { id: "ivoire", name: "Ivoire", detail: "Fermoir clip, grosses perles", image: "/img/08.jpg", price: PRICE },
+  { id: "blanc", name: "Blanc", detail: "Pochette bandoulière, plaque au prénom", image: "/img/09.jpg", price: PRICE },
+  { id: "argent", name: "Argent", detail: "Sac à rabat, anse en perles", image: "/img/10.jpg", price: PRICE },
 ];
 
 /** Price of the made-to-order bag from the customiser (null = sur demande). */
-export const CUSTOM_PRICE: number | null = null;
+export const CUSTOM_PRICE: number | null = PRICE;
 
 export function formatPrice(price: number | null) {
   return price === null ? "Prix sur demande" : `${price.toLocaleString("fr-TN")} DT`;

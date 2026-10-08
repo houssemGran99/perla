@@ -245,7 +245,7 @@ export default function CartDrawer() {
             <form id="checkout" noValidate onSubmit={submit} className="checkout">
               <h2 id="drawer-title">Vos coordonnées</h2>
               <p className="muted small">
-                Nous vous appelons pour confirmer la commande, le prix et la livraison. Paiement à la livraison.
+                Nous vous appelons pour confirmer la commande et la livraison. Paiement à la livraison.
               </p>
 
               <Field label="Nom et prénom" required error={showErr("name")} id="f-name">
@@ -374,7 +374,7 @@ export default function CartDrawer() {
                 Votre commande <strong>{ref}</strong> est bien reçue.
               </p>
               <p className="muted">
-                Nous vous appelons très vite pour confirmer le prix et la livraison. Paiement à la livraison.
+                Nous vous appelons très vite pour confirmer la commande et la livraison. Paiement à la livraison.
               </p>
               <button type="button" className="btn" onClick={() => dialogRef.current?.close()}>
                 Continuer
